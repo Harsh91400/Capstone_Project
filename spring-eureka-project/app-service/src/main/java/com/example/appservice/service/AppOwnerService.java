@@ -1,0 +1,25 @@
+package com.example.appservice.service;
+
+import com.example.appservice.model.AppOwner;
+import com.example.appservice.repository.AppOwnerRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class AppOwnerService {
+
+    private final AppOwnerRepository appOwnerRepository;
+
+    public AppOwnerService(AppOwnerRepository appOwnerRepository) {
+        this.appOwnerRepository = appOwnerRepository;
+    }
+
+    public AppOwner saveOwner(AppOwner owner) {
+        return appOwnerRepository.save(owner);
+    }
+
+    public List<AppOwner> getAllOwners() {
+        return appOwnerRepository.findAll();
+    }
+}

@@ -1,0 +1,41 @@
+package com.example.appservice.controller;
+
+import com.example.appservice.model.AppDetails;
+import com.example.appservice.repository.AppDetailsRepository;
+import com.example.appservice.service.AppOwnerService;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/apps")
+public class AppController {
+    @Autowired
+    private AppDetailsRepository appDetailsRepository;
+
+    @PostMapping("/add")
+    public AppDetails addApp(@RequestBody AppDetails app){
+        return appDetailsRepository.save(app);
+    }
+    @Autowired
+    private AppOwnerService appOwnerService;
+    @DeleteMapping("/apps/{id}")
+    public ResponseEntity<Void> deleteApp(@PathVariable Long id) {
+        appOwnerService.deleteApp(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    @GetMapping
+    public List<AppDetails> getAll(){
+        return appDetailsRepository.findAll();
+    }
+
+    @GetMapping("/genre/{genre}")
+    public List<AppDetails> getByGenre(@PathVariable String genre){
+        return appDetailsRepository.findByGenreIgnoreCase(genre);
+    }
+}

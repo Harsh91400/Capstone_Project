@@ -1,0 +1,60 @@
+package com.example.frontend.controller;
+
+import com.example.frontend.util.SessionUtil;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.*;
+
+import javax.servlet.http.HttpSession;
+import java.util.List;
+
+@Controller
+@RequestMapping("/admins-ui")
+public class AdminUIController {
+
+    private final RestTemplate restTemplate;
+    private final String backendBase;
+
+    public AdminUIController(RestTemplate restTemplate, @Value("${backend.base.url}") String backendBase) {
+        this.restTemplate = restTemplate;
+        this.backendBase = backendBase;
+    }
+
+    @GetMapping("/login")
+    public String showLogin() { return "admin-login"; }
+
+    @PostMapping("/login")
+    public String doLogin(@RequestParam String userName, @RequestParam String password, HttpSession session, Model model) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            String json = String.format("{\"userName\":\"%s\",\"password\":\"%s\"}", userName, password);
+            HttpEntity<String> entity = new HttpEntity<>(json, headers);
+            ResponseEntity<String> resp = restTemplate.postForEntity(backendBase + "/admins/login", entity, String.class);
+            if(resp.getStatusCode().is2xxSuccessful()) {
+                SessionUtil.setUser(session, "ADMIN", null, userName);
+                model.addAttribute("message", "Admin login successful");
+            } else {
+                model.addAttribute("message", "Login failed: " + resp.getBody());
+            }
+        } catch(Exception e) {
+            model.addAttribute("message", "Error: " + e.getMessage());
+        }
+        return "admin-login";
+    }
+
+    @GetMapping("/users")
+    public String showUsers(Model model) {
+        try {
+            ResponseEntity<List> resp = restTemplate.exchange(backendBase + "/users/all", HttpMethod.GET, null, List.class);
+            model.addAttribute("users", resp.getBody());
+        } catch(Exception e) {
+            model.addAttribute("users", List.of());
+            model.addAttribute("error", "Cannot load users: " + e.getMessage());
+        }
+        return "users";
+    }
+}

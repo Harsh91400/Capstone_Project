@@ -1,0 +1,76 @@
+package com.example.appservice.controller;
+
+import com.example.appservice.model.User;
+import com.example.appservice.repository.UserRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@RestController
+@RequestMapping("/users")
+@CrossOrigin(origins = "http://localhost:3001")
+public class UserController {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    // 1️⃣ Add User
+    @PostMapping("/add")
+    public ResponseEntity<?> addUser(@RequestBody User user){
+        try {
+            if(user.getDateOfOpen() == null) {
+                user.setDateOfOpen(LocalDate.now());
+            }
+            User savedUser = userRepository.save(user);
+            return ResponseEntity.ok(savedUser);
+        } catch(Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error adding user: " + e.getMessage());
+        }
+    }
+
+    // 2️⃣ Login with Active/Inactive Check
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody User payload){
+
+        User user = userRepository.findByUserName(payload.getUserName());
+
+        // User not found OR wrong password
+        if(user == null || !user.getPassword().equals(payload.getPassword())){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid username or password");
+        }
+
+        // User exists but inactive
+        if(!"ACTIVE".equalsIgnoreCase(user.getStatus())){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Your account has been deactivated, please contact admin");
+        }
+
+        // Successful login
+        return ResponseEntity.ok("Login Successful");
+    }
+
+    // 3️⃣ Get All Users (Admin dashboard)
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return ResponseEntity.ok(users);
+    }
+
+    // 4️⃣ Get user by id
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable Long id) {
+        return userRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body("User not found with ID: " + id));
+    }
+
+}

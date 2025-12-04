@@ -1,0 +1,21 @@
+@Service
+public class AppOwnerService {
+
+    private final AppOwnerRepository appOwnerRepository;
+
+    public AppOwnerService(AppOwnerRepository appOwnerRepository) {
+        this.appOwnerRepository = appOwnerRepository;
+    }
+
+    public AppOwner getOwnerByUsername(String username) {
+        return appOwnerRepository.findByUserName(username);
+    }
+
+    public AppOwner saveOwner(AppOwner owner) {
+        return appOwnerRepository.save(owner);
+    }
+
+    public List<AppOwner> getAllOwners() {
+        return appOwnerRepository.findAll();
+    }
+}
