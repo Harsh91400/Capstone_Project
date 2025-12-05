@@ -1,0 +1,71 @@
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<style>
+    :root {
+        --nav-bg-start: #f97316;
+        --nav-bg-end: #fb7185;
+        --nav-text: #111827;
+        --nav-link: #1f2933;
+        --nav-link-hover: #111827;
+    }
+
+    .top-nav {
+        background: linear-gradient(90deg, var(--nav-bg-start), var(--nav-bg-end));
+        padding: 8px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-radius: 0 0 14px 14px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .top-nav-title {
+        font-weight: 600;
+        font-size: 18px;
+        color: var(--nav-text);
+    }
+
+    .top-nav-links a {
+        margin-left: 14px;
+        font-size: 13px;
+        text-decoration: none;
+        color: var(--nav-link);
+        font-weight: 500;
+        position: relative;
+    }
+
+    .top-nav-links a:hover {
+        color: var(--nav-link-hover);
+    }
+
+    .top-nav-links a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -2px;
+        height: 2px;
+        width: 0;
+        background: #111827;
+        transition: width 0.18s ease;
+    }
+
+    .top-nav-links a:hover::after {
+        width: 100%;
+    }
+</style>
+
+<div class="top-nav">
+    <div class="top-nav-title">App Store</div>
+    <div class="top-nav-links">
+        <a href="${pageContext.request.contextPath}/">Home</a>
+        <a href="${pageContext.request.contextPath}/users-ui/login">User</a>
+        <a href="${pageContext.request.contextPath}/owners-ui/login">Owner</a>
+        <a href="${pageContext.request.contextPath}/admins-ui/login">Admin</a>
+
+        <!-- Logout link (optional: only show if koi login hai) -->
+        <c:if test="${not empty sessionScope.userName}">
+            <a href="${pageContext.request.contextPath}/logout">Logout</a>
+        </c:if>
+    </div>
+</div>

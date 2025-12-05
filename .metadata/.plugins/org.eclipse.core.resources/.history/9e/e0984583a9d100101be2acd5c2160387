@@ -1,0 +1,159 @@
+package com.example.frontend.controller;
+
+import com.example.frontend.util.SessionUtil;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.*;
+
+import javax.servlet.http.HttpSession;
+import java.util.List;
+
+@Controller
+@RequestMapping("/admins-ui")
+public class AdminUIController {
+
+    private final RestTemplate restTemplate;
+    private final String backendBase;
+
+    public AdminUIController(RestTemplate restTemplate, @Value("${backend.base.url}") String backendBase) {
+        this.restTemplate = restTemplate;
+        this.backendBase = backendBase;
+    }
+
+    @GetMapping("/login")
+    public String showLogin() { return "admin-login"; }
+
+    @PostMapping("/login")
+    public String doLogin(@RequestParam String userName,
+                          @RequestParam String password,
+                          HttpSession session,
+                          Model model) {
+        try {
+            userName = userName.trim();
+            password = password.trim();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            String json = String.format(
+                    "{\"userName\":\"%s\",\"password\":\"%s\"}",
+                    userName, password);
+
+            HttpEntity<String> entity = new HttpEntity<>(json, headers);
+
+            ResponseEntity<String> resp =
+                    restTemplate.postForEntity(backendBase + "/admins/login",
+                            entity, String.class);
+
+            // 200 OK: login success → dashboard pe bhejo
+            if (resp.getStatusCode().is2xxSuccessful()) {
+                SessionUtil.setUser(session, "ADMIN", null, userName);
+                return "redirect:/admins-ui/dashboard";
+            }
+
+            model.addAttribute("message", "Unexpected response: " + resp.getBody());
+        } catch (org.springframework.web.client.HttpClientErrorException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
+                model.addAttribute("message", "Admin doesn't exist");
+            } else if (ex.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                model.addAttribute("message", "Wrong password");
+            } else if (ex.getStatusCode() == HttpStatus.BAD_REQUEST) {
+                model.addAttribute("message", "Please enter username and password");
+            } else {
+                model.addAttribute("message",
+                        "Login failed: " + ex.getStatusCode().value());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("message", "Error: " + e.getMessage());
+        }
+        return "admin-login";
+    }
+
+
+    @GetMapping("/users")
+    public String showUsers(Model model) {
+        try {
+            ResponseEntity<List> resp = restTemplate.exchange(backendBase + "/users/all", HttpMethod.GET, null, List.class);
+            model.addAttribute("users", resp.getBody());
+        } catch(Exception e) {
+            model.addAttribute("users", List.of());
+            model.addAttribute("error", "Cannot load users: " + e.getMessage());
+        }
+        return "users";
+    }
+    
+    
+    @GetMapping("/dashboard")
+    public String dashboard(Model model) {
+        try {
+            // USERS
+            ResponseEntity<List> usersResp =
+                    restTemplate.exchange(backendBase + "/users/all",
+                            HttpMethod.GET, null, List.class);
+            model.addAttribute("users", usersResp.getBody());
+
+            // APPS
+            ResponseEntity<List> appsResp =
+                    restTemplate.exchange(backendBase + "/apps",
+                            HttpMethod.GET, null, List.class);
+            model.addAttribute("apps", appsResp.getBody());
+
+            // OWNERS
+            ResponseEntity<List> ownersResp =
+                    restTemplate.exchange(backendBase + "/owners/list",
+                            HttpMethod.GET, null, List.class);
+            model.addAttribute("owners", ownersResp.getBody());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("error", "Failed to load data: " + e.getMessage());
+        }
+
+        return "admin-dashboard";
+    }
+
+    // ------------ I made SIMPLE DELETE ACTIONS ------------
+    @PostMapping("/users/{id}/delete")
+    public String deleteUser(@PathVariable("id") Long id, RedirectAttributes ra) {
+        try {
+            restTemplate.exchange(backendBase + "/users/" + id,
+                    HttpMethod.DELETE, null, Void.class);
+            ra.addFlashAttribute("message", "User deleted: " + id);
+        } catch (Exception e) {
+            ra.addFlashAttribute("message", "Failed to delete user: " + e.getMessage());
+        }
+        return "redirect:/admins-ui/dashboard";
+    }
+
+    
+    @PostMapping("/apps/{id}/delete")
+    public String deleteApp(@PathVariable("id") Long id, RedirectAttributes ra) {
+        try {
+            restTemplate.exchange(backendBase + "/apps/" + id,
+                    HttpMethod.DELETE, null, Void.class);
+            ra.addFlashAttribute("message", "App deleted: " + id);
+        } catch (Exception e) {
+            ra.addFlashAttribute("message", "Failed to delete app: " + e.getMessage());
+        }
+        return "redirect:/admins-ui/dashboard";
+    }
+
+    
+    @PostMapping("/owners/{id}/delete")
+    public String deleteOwner(@PathVariable("id") Long id, RedirectAttributes ra) {
+        try {
+            restTemplate.exchange(backendBase + "/owners/" + id,
+                    HttpMethod.DELETE, null, Void.class);
+            ra.addFlashAttribute("message", "Owner deleted: " + id);
+        } catch (Exception e) {
+            ra.addFlashAttribute("message", "Failed to delete owner: " + e.getMessage());
+        }
+        return "redirect:/admins-ui/dashboard";
+    }
+
+}

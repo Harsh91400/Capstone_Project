@@ -1,29 +1,74 @@
-<%@ page contentType="text/html;charset=UTF-8" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
     <title>Owner Login</title>
+    <style>
+        /* same CSS as user-login, you can reuse exactly */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top, #1e293b 0, #020617 45%, #000 100%);
+            margin: 0;
+            color: #e5e7eb;
+        }
+        .container { max-width: 400px; margin: 50px auto; padding: 0 16px; }
+        .card {
+            background: rgba(15,23,42,0.96);
+            border-radius: 16px;
+            padding: 22px 22px 24px;
+            box-shadow: 0 18px 40px rgba(15,23,42,0.9);
+            border: 1px solid rgba(148,163,184,0.4);
+        }
+        h2 { margin-top: 0; text-align: center; font-size: 20px; }
+        .form-group { margin-bottom: 14px; }
+        label { font-size: 13px; display: block; margin-bottom: 4px; }
+        input[type="text"], input[type="password"] {
+            width: 100%; padding: 8px 10px; border-radius: 8px;
+            border: 1px solid #4b5563; background: #020617; color:#e5e7eb; font-size:13px;
+        }
+        input:focus { outline:none; border-color:#6366f1; box-shadow:0 0 0 1px #6366f1; }
+        .btn-primary {
+            width: 100%; border:none; border-radius:999px; padding:9px 0;
+            font-size:14px; background:linear-gradient(135deg,#6366f1,#f97316);
+            color:white; cursor:pointer; font-weight:600; margin-top:6px;
+        }
+        .btn-secondary {
+            width:100%; border:1px solid #6366f1; border-radius:999px;
+            padding:8px 0; font-size:13px; background:transparent;
+            color:#e5e7eb; cursor:pointer; margin-top:10px;
+        }
+        .msg { margin-bottom:10px; font-size:12px; color:#fca5a5; text-align:center; }
+    </style>
 </head>
 <body>
-<h2>Owner Login</h2>
 
-<c:if test="${not empty error}">
-    <p style="color:red">${error}</p>
-</c:if>
+<jsp:include page="navbar.jsp"/>
 
-<form action="/owners/login" method="post">
-    <label>Username:</label>
-    <input type="text" name="username" required />
+<div class="container">
+    <div class="card">
+        <h2>Owner Login</h2>
 
-    <br/>
+        <c:if test="${not empty message}">
+            <div class="msg">${message}</div>
+        </c:if>
 
-    <label>Password:</label>
-    <input type="password" name="password" required />
+        <form action="${pageContext.request.contextPath}/owners-ui/login" method="post">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="userName" required />
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required />
+            </div>
+            <button type="submit" class="btn-primary">Login</button>
+        </form>
 
-    <br/>
-
-    <button type="submit">Login</button>
-</form>
+        <form action="${pageContext.request.contextPath}/owners-ui/register" method="get">
+            <button type="submit" class="btn-secondary">New Owner? Register Here</button>
+        </form>
+    </div>
+</div>
 
 </body>
 </html>

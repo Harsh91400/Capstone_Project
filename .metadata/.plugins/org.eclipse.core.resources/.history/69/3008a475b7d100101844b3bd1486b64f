@@ -1,0 +1,322 @@
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>App Store – Home</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top, #1e293b 0, #020617 45%, #000 100%);
+            margin: 0;
+            color: #e5e7eb;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 30px auto 50px;
+            padding: 0 18px;
+        }
+
+        /* HERO */
+        .hero {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 28px;
+            align-items: center;
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+
+        .hero-left {
+            background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(37,99,235,0.95));
+            padding: 26px 24px;
+            border-radius: 18px;
+            border: 1px solid rgba(148,163,184,0.45);
+            box-shadow: 0 20px 45px rgba(15,23,42,0.9);
+        }
+
+        .hero-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin: 0 0 8px;
+        }
+
+        .hero-title span {
+            color: #f97316;
+        }
+
+        .hero-subtitle {
+            font-size: 14px;
+            color: #d1d5db;
+            margin-bottom: 18px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .btn-main, .btn-outline {
+            border-radius: 999px;
+            padding: 10px 18px;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg,#6366f1,#f97316);
+            color: #f9fafb;
+            font-weight: 600;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #6366f1;
+            color: #e5e7eb;
+        }
+
+        .hero-small {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .hero-right {
+            background: rgba(15,23,42,0.96);
+            padding: 20px 18px;
+            border-radius: 18px;
+            border: 1px solid rgba(148,163,184,0.4);
+            box-shadow: 0 18px 45px rgba(15,23,42,0.95);
+        }
+
+        .hero-right-title {
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .steps {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 13px;
+        }
+
+        .steps li {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+            color: #cbd5f5;
+        }
+
+        .steps i {
+            color: #f97316;
+            margin-top: 2px;
+        }
+
+        /* FEATURE CARDS */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0,1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .feature-card {
+            background: rgba(15,23,42,0.96);
+            border-radius: 16px;
+            padding: 14px 14px 16px;
+            border: 1px solid rgba(148,163,184,0.45);
+            box-shadow: 0 16px 38px rgba(15,23,42,0.9);
+            font-size: 13px;
+        }
+
+        .feature-card i {
+            font-size: 20px;
+            color: #f97316;
+            margin-bottom: 6px;
+        }
+
+        .feature-card h3 {
+            margin: 0 0 4px;
+            font-size: 15px;
+        }
+
+        .feature-card p {
+            margin: 0;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        /* APPS PREVIEW */
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: rgba(99,102,241,0.15);
+            border: 1px solid rgba(99,102,241,0.45);
+        }
+
+        .apps-preview {
+            background: rgba(15,23,42,0.96);
+            border-radius: 16px;
+            border: 1px solid rgba(148,163,184,0.45);
+            box-shadow: 0 16px 38px rgba(15,23,42,0.9);
+            padding: 14px 16px;
+        }
+
+        .apps-preview-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(30,41,59,0.9);
+        }
+
+        .apps-preview-item:last-child {
+            border-bottom: none;
+        }
+
+        .apps-preview-name {
+            font-weight: 500;
+        }
+
+        .apps-preview-meta {
+            color: #9ca3af;
+        }
+
+        .apps-link {
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .apps-link a {
+            color: #6366f1;
+            text-decoration: none;
+        }
+
+        .apps-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 820px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<jsp:include page="navbar.jsp" />
+
+<div class="container">
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-left">
+            <div class="hero-title">
+                Welcome to <span>App Store</span>
+            </div>
+            <div class="hero-subtitle">
+                Manage users, apps and owners from a single place.  
+                Login as a user, register your own apps as owner, or control everything as admin.
+            </div>
+
+            <div class="hero-actions">
+                <!-- adjust hrefs if your mappings are different -->
+                <a href="${pageContext.request.contextPath}/users-ui/login" class="btn-main">
+                    <i class="fa-solid fa-user"></i> User Portal
+                </a>
+                <a href="${pageContext.request.contextPath}/owners-ui/login" class="btn-outline">
+                    <i class="fa-solid fa-user-tie"></i> Owner Portal
+                </a>
+                <a href="${pageContext.request.contextPath}/admins-ui/login" class="btn-outline">
+                    <i class="fa-solid fa-shield-halved"></i> Admin Login
+                </a>
+            </div>
+
+            <div class="hero-small">
+                Tip: New here? User / Owner portals se aap registration screens pe ja sakte hain.
+            </div>
+        </div>
+
+        <div class="hero-right">
+            <div class="hero-right-title">
+                <i class="fa-solid fa-bolt"></i> How it works
+            </div>
+            <ul class="steps">
+                <li>
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span><strong>Users</strong> account create karke apps browse aur manage kar sakte hain.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span><strong>Owners</strong> apne apps register karke unka data aur rating dekh sakte hain.</span>
+                </li>
+                <li>
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span><strong>Admin</strong> users ko activate / deactivate, apps & owners ko control kar sakta hai.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="feature-grid">
+        <div class="feature-card">
+            <i class="fa-solid fa-users"></i>
+            <h3>User Management</h3>
+            <p>Create users, control login status and manage their basic details from admin dashboard.</p>
+        </div>
+        <div class="feature-card">
+            <i class="fa-solid fa-mobile-screen"></i>
+            <h3>App Catalog</h3>
+            <p>List of apps with genre, type and rating. Users can explore apps, admin can keep things clean.</p>
+        </div>
+        <div class="feature-card">
+            <i class="fa-solid fa-user-tie"></i>
+            <h3>Owner Console</h3>
+            <p>Owners get a dedicated area to see their apps and manage details like description and updates.</p>
+        </div>
+    </div>
+
+    <!-- APPS PREVIEW (optional small list if model me apps aaye) -->
+    <c:if test="${not empty apps}">
+        <div class="section-title">Some Apps</div>
+        <div class="apps-preview">
+            <c:forEach var="app" items="${apps}" begin="0" end="4">
+                <div class="apps-preview-item">
+                    <div class="apps-preview-name">${app.appName}</div>
+                    <div class="apps-preview-meta">
+                        ${app.genre} · ${app.appType} · ⭐ ${app.rating}
+                    </div>
+                </div>
+            </c:forEach>
+
+            <div class="apps-link">
+                <a href="${pageContext.request.contextPath}/apps-ui">
+                    View full app catalog →
+                </a>
+            </div>
+        </div>
+    </c:if>
+
+</div>
+
+</body>
+</html>

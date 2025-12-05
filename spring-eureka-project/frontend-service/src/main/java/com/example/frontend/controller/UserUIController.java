@@ -32,17 +32,69 @@ public class UserUIController {
     @PostMapping("/register")
     public String doRegister(@RequestParam Map<String,String> params, Model model) {
         try {
+            // Body map jisme sab fields dalenge
+            Map<String, Object> body = new java.util.HashMap<>();
+
+            // Basic details
+            body.put("firstName",  params.getOrDefault("firstName", ""));
+            body.put("lastName",   params.getOrDefault("lastName", ""));
+            body.put("userName",   params.getOrDefault("userName", ""));
+            body.put("password",   params.getOrDefault("password", ""));
+            body.put("email",      params.getOrDefault("email", ""));
+            body.put("mobileNo",   params.getOrDefault("mobileNo", ""));
+
+            // Dates (string format hi bhej rahe hain, backend parse karega)
+            body.put("dob", params.getOrDefault("dob", null));
+            // dateOfOpen backend set kare to yahan se bhejne ki zaroorat nahi
+
+            // Account details
+            body.put("accountType", params.getOrDefault("accountType", null));
+            body.put("cheqFacil",   params.getOrDefault("cheqFacil", null));
+
+            String amountStr = params.get("amount");
+            if (amountStr != null && !amountStr.isBlank()) {
+                try {
+                    body.put("amount", Double.parseDouble(amountStr));
+                } catch (NumberFormatException e) {
+                    body.put("amount", null);
+                }
+            } else {
+                body.put("amount", null);
+            }
+
+            // Address
+            body.put("address1", params.getOrDefault("address1", null));
+            body.put("address2", params.getOrDefault("address2", null));
+            body.put("city",     params.getOrDefault("city", null));
+            body.put("state",    params.getOrDefault("state", null));
+            body.put("zipCode",  params.getOrDefault("zipCode", null));
+            body.put("country",  params.getOrDefault("country", null));
+
+            // Status
+            //body.put("status", params.getOrDefault("status", "ACTIVE"));
+            body.put("status", "INACTIVE");
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            String json = String.format("{\"firstName\":\"%s\",\"lastName\":\"%s\",\"userName\":\"%s\",\"password\":\"%s\",\"email\":\"%s\",\"mobileNo\":\"%s\"}", params.getOrDefault("firstName",""), params.getOrDefault("lastName",""), params.getOrDefault("userName",""), params.getOrDefault("password",""), params.getOrDefault("email",""), params.getOrDefault("mobileNo",""));
-            HttpEntity<String> entity = new HttpEntity<>(json, headers);
-            ResponseEntity<String> resp = restTemplate.postForEntity(backendBase + "/users/add", entity, String.class);
-            model.addAttribute("message", "Registration response: " + resp.getBody());
-        } catch(Exception e) {
-            model.addAttribute("message", "Error: " + e.getMessage());
+
+            HttpEntity<Map<String,Object>> entity = new HttpEntity<>(body, headers);
+
+            ResponseEntity<String> resp =
+                    restTemplate.postForEntity(backendBase + "/users/add", entity, String.class);
+
+            model.addAttribute("message", "Registered successfully..."); //resp.getBody()
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            String body = e.getResponseBodyAsString();
+            if (body != null && body.contains("EMAIL")) {
+                model.addAttribute("message", "This email is already registered. Please use a different email.");
+            } else {
+                model.addAttribute("message", "Error from server: " + e.getStatusCode());
+            }
+        } catch (Exception e) {
+            model.addAttribute("message", "Unexpected error: " + e.getMessage());
         }
         return "user-register";
     }
+
 
     @GetMapping("/login")
     public String showLogin() { return "user-login"; }

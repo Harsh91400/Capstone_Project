@@ -1,0 +1,79 @@
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<style>
+    :root {
+        --nav-bg: rgba(15, 23, 42, 0.85);
+        --nav-border: rgba(99, 102, 241, 0.4);
+        --nav-hover: #f97316;
+        --nav-text: #e5e7eb;
+    }
+
+    .top-nav {
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        background: var(--nav-bg);
+        border-bottom: 1px solid var(--nav-border);
+        padding: 12px 26px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+        font-family: 'Poppins', sans-serif;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+    }
+
+    .top-nav-title {
+        font-weight: 600;
+        font-size: 19px;
+        color: #ffffff;
+        letter-spacing: .3px;
+    }
+
+    .top-nav-links a {
+        margin-left: 20px;
+        font-size: 13px;
+        text-decoration: none;
+        color: var(--nav-text);
+        font-weight: 500;
+        transition: color 0.18s ease;
+        position: relative;
+        padding-bottom: 3px;
+    }
+
+    .top-nav-links a:hover {
+        color: var(--nav-hover);
+    }
+
+    .top-nav-links a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 2px;
+        width: 0;
+        background: var(--nav-hover);
+        transition: width 0.2s ease-in-out;
+        border-radius: 12px;
+    }
+
+    .top-nav-links a:hover::after {
+        width: 100%;
+    }
+</style>
+
+<div class="top-nav">
+    <div class="top-nav-title">App Store</div>
+
+    <div class="top-nav-links">
+        <a href="${pageContext.request.contextPath}/">Home</a>
+        <a href="${pageContext.request.contextPath}/users-ui/login">User</a>
+        <a href="${pageContext.request.contextPath}/owners-ui/login">Owner</a>
+        <a href="${pageContext.request.contextPath}/admins-ui/login">Admin</a>
+
+        <c:if test="${not empty sessionScope.userName}">
+            <a href="${pageContext.request.contextPath}/logout">Logout</a>
+        </c:if>
+    </div>
+</div>

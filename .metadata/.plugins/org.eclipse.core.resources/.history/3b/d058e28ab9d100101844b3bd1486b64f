@@ -1,0 +1,179 @@
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>Add App</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top, #1e293b 0, #020617 45%, #000 100%);
+            margin: 0;
+            color: #e5e7eb;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 40px auto 50px;
+            padding: 0 18px;
+        }
+
+        .form-card {
+            background: rgba(15,23,42,0.96);
+            padding: 26px 26px 28px;
+            border-radius: 18px;
+            border: 1px solid rgba(148,163,184,0.4);
+            box-shadow: 0 18px 40px rgba(15,23,42,0.9);
+        }
+
+        h2 {
+            margin: 4px 0 14px;
+            font-size: 22px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        h2 i {
+            color: #f97316;
+            margin-right: 6px;
+        }
+
+        .row {
+            display: flex;
+            gap: 14px;
+        }
+
+        .field {
+            flex: 1;
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #4b5563;
+            background: #020617;
+            color: #e5e7eb;
+            font-size: 13px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 1px #6366f1;
+        }
+
+        .btn-primary {
+            width: 100%;
+            border: none;
+            border-radius: 999px;
+            padding: 11px 0;
+            font-size: 14px;
+            background: linear-gradient(135deg,#6366f1,#f97316);
+            color: #f9fafb;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .msg {
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .msg-success {
+            background: rgba(34,197,94,0.12);
+            border: 1px solid rgba(34,197,94,0.7);
+            color: #bbf7d0;
+        }
+
+        .msg-error {
+            background: rgba(248,113,113,0.14);
+            border: 1px solid rgba(248,113,113,0.8);
+            color: #fecaca;
+        }
+    </style>
+</head>
+<body>
+
+<jsp:include page="navbar.jsp" />
+
+<div class="container">
+    <div class="form-card">
+
+        <h2><i class="fa-solid fa-square-plus"></i>Add New App</h2>
+
+        <c:if test='${not empty message}'>
+            <div class="msg msg-success">${message}</div>
+        </c:if>
+        <c:if test='${not empty error}'>
+            <div class="msg msg-error">${error}</div>
+        </c:if>
+
+        <form action="${pageContext.request.contextPath}/owners-ui/add-app" method="post">
+
+            <div class="row">
+                <div class="field">
+                    <label>App Name</label>
+                    <input name="appName" required/>
+                </div>
+                <div class="field">
+                    <label>App Type</label>
+                    <input name="appType" placeholder="Free / Paid / Subscription"/>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Description</label>
+                <textarea name="description" placeholder="Short description of your app"></textarea>
+            </div>
+
+            <div class="row">
+                <div class="field">
+                    <label>Genre</label>
+                    <input name="genre" placeholder="Tools, Games, Social, ..."/>
+                </div>
+                <div class="field">
+                    <label>Rating</label>
+                    <input name="rating" placeholder="4.5"/>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="field">
+                    <label>Release Date</label>
+                    <input type="date" name="releaseDate"/>
+                </div>
+                <div class="field">
+                    <label>Version</label>
+                    <input name="version" placeholder="1.0.0"/>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary">Add App</button>
+        </form>
+
+    </div>
+</div>
+
+</body>
+</html>

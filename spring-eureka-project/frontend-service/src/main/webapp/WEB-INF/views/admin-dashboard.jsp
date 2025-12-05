@@ -3,129 +3,403 @@
 <html>
 <head>
     <title>Admin Dashboard</title>
+
+    <!-- Google Fonts + Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
     <style>
-        body { font-family: Arial; max-width: 1100px; margin: 20px auto; }
-        h2 { margin-top: 0; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 6px 8px; font-size: 13px; }
-        th { background: #ffe0b2; }
-        .section-title { background: #ffcc80; padding: 6px 10px; margin: 15px 0 5px; border-radius: 4px; }
-        .btn-delete { background: #ff5252; border: none; color: white; padding: 4px 8px; cursor: pointer;
-                      border-radius: 4px; font-size: 12px; }
-        .btn-delete:hover { opacity: 0.85; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; }
-        .message { margin: 10px 0; color: green; }
-        .error { margin: 10px 0; color: red; }
-        a.small-link { font-size: 12px; margin-right: 10px; }
+        :root {
+            --bg-main: #050816;
+            --bg-card: rgba(15, 23, 42, 0.95);
+            --accent: #6366f1;
+            --accent-soft: rgba(99, 102, 241, 0.15);
+            --text-main: #e5e7eb;
+            --text-muted: #9ca3af;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --border-soft: rgba(148, 163, 184, 0.25);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top, #1e293b 0, #020617 45%, #000 100%);
+            color: var(--text-main);
+        }
+
+        .container {
+            width: 96%;
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 20px 0 40px;
+        }
+
+        /* ==== WELCOME + PROFILE ==== */
+        .welcome-box {
+            margin-top: 10px;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 64, 175, 0.9));
+            border-radius: 14px;
+            padding: 18px 22px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            font-size: 18px;
+        }
+        .welcome-box span { font-weight: 600; color: #facc15; }
+
+        .admin-profile-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 14px;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 64, 175, 0.85));
+            padding: 14px 18px;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            box-shadow: 0 16px 35px rgba(15, 23, 42, 0.65);
+        }
+        .admin-profile-card i {
+            font-size: 32px;
+            color: #f97316;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 10px;
+            border-radius: 999px;
+        }
+        .admin-info h3 { margin: 0; font-size: 19px; font-weight: 600; }
+        .admin-info p { margin: 2px 0 0; font-size: 13px; color: var(--text-muted); }
+
+        /* ==== FLASH MESSAGE ==== */
+        .flash {
+            margin-top: 12px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+        .flash-success {
+            background: rgba(34,197,94,0.12);
+            border: 1px solid rgba(34,197,94,0.7);
+            color: #bbf7d0;
+        }
+        .flash-error {
+            background: rgba(248,113,113,0.14);
+            border: 1px solid rgba(248,113,113,0.8);
+            color: #fecaca;
+        }
+
+        /* ==== DASHBOARD CARDS ==== */
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin: 22px 0 26px;
+        }
+        .card {
+            position: relative;
+            background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.25), rgba(15, 23, 42, 0.95));
+            border-radius: 16px;
+            padding: 18px 16px 16px;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.45);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.95);
+            border-color: var(--accent);
+        }
+        .card-active {
+            border-color: var(--accent);
+            box-shadow: 0 24px 60px rgba(99, 102, 241, 0.6);
+        }
+        .card i { font-size: 30px; color: #f97316; margin-bottom: 8px; }
+        .card h3 { margin: 0; font-size: 17px; font-weight: 600; }
+        .card p { margin: 4px 0 0; font-size: 12px; color: var(--text-muted); }
+
+        /* === SECTION + TABLES === */
+        .section-panel { display: none; margin-bottom: 26px; }
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: var(--accent-soft);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+        }
+        .table-wrapper {
+            overflow: hidden;
+            border-radius: 14px;
+            border: 1px solid var(--border-soft);
+            background: var(--bg-card);
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.9);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: var(--text-main);
+            font-size: 13px;
+        }
+        th, td {
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+        }
+        th {
+            text-align: left;
+            background: rgba(15, 23, 42, 0.96);
+            font-size: 12px;
+            color: #cbd5f5;
+        }
+        tr:nth-child(even) td { background: rgba(15, 23, 42, 0.92); }
+        tr:nth-child(odd) td  { background: rgba(15, 23, 42, 0.98); }
+
+        .btn-delete, .btn-activate {
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            font-size: 11px;
+            color: #f9fafb;
+            font-weight: 500;
+        }
+        .btn-delete {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+        }
+        .btn-activate {
+            background: linear-gradient(135deg, #22c55e, #15803d);
+            margin-left: 4px;
+        }
+
+        .badge-active, .badge-inactive {
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .badge-active {
+            background: rgba(34, 197, 94, 0.18);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.6);
+        }
+        .badge-inactive {
+            background: rgba(248, 113, 113, 0.14);
+            color: #fca5a5;
+            border: 1px solid rgba(248, 113, 113, 0.7);
+        }
+
+        .links-row {
+            margin-top: 10px;
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+        }
+        .links-row a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .links-row a:hover { text-decoration: underline; }
     </style>
+
+    <script>
+        function showSection(section) {
+            const sections = ['users', 'apps', 'owners'];
+
+            sections.forEach(s => {
+                const panel = document.getElementById(s + '-panel');
+                const card = document.getElementById(s + '-card');
+                if (panel) {
+                    panel.style.display = (s === section) ? 'block' : 'none';
+                }
+                if (card) {
+                    if (s === section) card.classList.add('card-active');
+                    else card.classList.remove('card-active');
+                }
+            });
+        }
+
+        // ✅ Dashboard load hone par Users section auto open
+        window.onload = function () {
+            showSection('users');
+        };
+    </script>
 </head>
 <body>
+
 <jsp:include page="navbar.jsp"/>
 
-<div class="top-bar">
-    <h2>Admin Dashboard</h2>
-    <div>
-        <span>Logged in as: ${sessionScope.userName}</span>
+<div class="container">
+
+    <!-- Welcome -->
+    <div class="welcome-box">
+        Hello, <span>${sessionScope.userName}</span> 👋 &nbsp;Welcome to your dashboard
     </div>
+
+    <!-- Admin profile card -->
+    <div class="admin-profile-card">
+        <i class="fa-solid fa-user-shield"></i>
+        <div class="admin-info">
+            <h3>${sessionScope.userName}</h3>
+            <p>Administrator · Full access to users, apps & owners</p>
+        </div>
+    </div>
+
+    <!-- FLASH MESSAGE (activate / delete etc.) -->
+    <c:if test="${not empty message}">
+        <div class="flash flash-success">
+            ${message}
+        </div>
+    </c:if>
+    <c:if test="${not empty error}">
+        <div class="flash flash-error">
+            ${error}
+        </div>
+    </c:if>
+
+    <!-- Quick links -->
+    <div class="links-row">
+        <a href="${pageContext.request.contextPath}/users-ui/register"><i class="fa-solid fa-user-plus"></i> Add User</a>
+        <a href="${pageContext.request.contextPath}/owners-ui/register"><i class="fa-solid fa-id-badge"></i> Add Owner</a>
+        <a href="${pageContext.request.contextPath}/owners-ui/add-app"><i class="fa-solid fa-square-plus"></i> Add App</a>
+    </div>
+
+    <!-- Cards / Tabs -->
+    <div class="dashboard-cards">
+        <div class="card" id="users-card" onclick="showSection('users')">
+            <i class="fa-solid fa-users"></i>
+            <h3>Users</h3>
+            <p>Manage user accounts & status</p>
+        </div>
+        <div class="card" id="apps-card" onclick="showSection('apps')">
+            <i class="fa-solid fa-mobile-screen"></i>
+            <h3>Apps</h3>
+            <p>View & manage registered apps</p>
+        </div>
+        <div class="card" id="owners-card" onclick="showSection('owners')">
+            <i class="fa-solid fa-user-tie"></i>
+            <h3>App Owners</h3>
+            <p>Control app owner accounts</p>
+        </div>
+    </div>
+
+    <!-- USERS SECTION -->
+    <div id="users-panel" class="section-panel">
+        <div class="section-title">Users</div>
+        <div class="table-wrapper">
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+                <c:forEach var="u" items="${users}">
+                    <tr>
+                        <td>${u.userId}</td>
+                        <td>${u.firstName} ${u.lastName}</td>
+                        <td>${u.userName}</td>
+                        <td>${u.email}</td>
+                        <td>${u.mobileNo}</td>
+                        <td>
+                            <c:if test="${u.status == 'ACTIVE'}">
+                                <span class="badge-active">ACTIVE</span>
+                            </c:if>
+                            <c:if test="${u.status == 'INACTIVE'}">
+                                <span class="badge-inactive">INACTIVE</span>
+                            </c:if>
+                        </td>
+                        <td>
+                            <form action="${pageContext.request.contextPath}/admins-ui/users/${u.userId}/delete"
+                                  method="post" style="display:inline">
+                                <button type="submit" class="btn-delete">Delete</button>
+                            </form>
+                            <c:if test="${u.status == 'INACTIVE'}">
+                                <form action="${pageContext.request.contextPath}/admins-ui/users/${u.userId}/activate"
+                                      method="post" style="display:inline">
+                                    <button type="submit" class="btn-activate">Activate</button>
+                                </form>
+                            </c:if>
+                        </td>
+                    </tr>
+                </c:forEach>
+            </table>
+        </div>
+    </div>
+
+    <!-- APPS SECTION -->
+    <div id="apps-panel" class="section-panel">
+        <div class="section-title">Apps</div>
+        <div class="table-wrapper">
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Owner ID</th>
+                    <th>Genre</th>
+                    <th>Type</th>
+                    <th>Rating</th>
+                    <th>Actions</th>
+                </tr>
+                <c:forEach var="a" items="${apps}">
+                    <tr>
+                        <td>${a.appId}</td>
+                        <td>${a.appName}</td>
+                        <td>${a.appOwnerId}</td>
+                        <td>${a.genre}</td>
+                        <td>${a.appType}</td>
+                        <td>${a.rating}</td>
+                        <td>
+                            <form action="${pageContext.request.contextPath}/admins-ui/apps/${a.appId}/delete"
+                                  method="post" style="display:inline">
+                                <button type="submit" class="btn-delete">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                </c:forEach>
+            </table>
+        </div>
+    </div>
+
+    <!-- OWNERS SECTION -->
+    <div id="owners-panel" class="section-panel">
+        <div class="section-title">App Owners</div>
+        <div class="table-wrapper">
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>Actions</th>
+                </tr>
+                <c:forEach var="owner" items="${owners}">
+                    <tr>
+                        <td>${owner.appOwnerId}</td>
+                        <td>${owner.firstName} ${owner.lastName}</td>
+                        <td>${owner.userName}</td>
+                        <td>${owner.email}</td>
+                        <td>${owner.mobile}</td>
+                        <td>
+                            <form action="${pageContext.request.contextPath}/admins-ui/owners/${owner.appOwnerId}/delete"
+                                  method="post" style="display:inline">
+                                <button type="submit" class="btn-delete">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                </c:forEach>
+            </table>
+        </div>
+    </div>
+
 </div>
-
-<c:if test="${not empty message}">
-    <div class="message">${message}</div>
-</c:if>
-<c:if test="${not empty error}">
-    <div class="error">${error}</div>
-</c:if>
-
-<!-- Quick links -->
-<div style="margin-bottom: 10px;">
-    <a class="small-link" href="${pageContext.request.contextPath}/users-ui/register">Add User</a>
-    <a class="small-link" href="${pageContext.request.contextPath}/owners-ui/register">Add Owner</a>
-    <a class="small-link" href="${pageContext.request.contextPath}/owners-ui/add-app">Add App</a>
-</div>
-
-<!-- USERS SECTION -->
-<div class="section-title">Users</div>
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Username</th>
-        <th>Email</th>
-        <th>Mobile</th>
-        <th>Actions</th>
-    </tr>
-    <c:forEach var="u" items="${users}">
-        <tr>
-            <td>${u.userId}</td>
-            <td>${u.firstName} ${u.lastName}</td>
-            <td>${u.userName}</td>
-            <td>${u.email}</td>
-            <td>${u.mobileNo}</td>
-            <td>
-                <form action="${pageContext.request.contextPath}/admins-ui/users/${u.userId}/delete"
-                      method="post" style="display:inline">
-                    <button type="submit" class="btn-delete">Delete</button>
-                </form>
-            </td>
-        </tr>
-    </c:forEach>
-</table>
-
-<!-- APPS SECTION -->
-<div class="section-title">Apps</div>
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Owner ID</th>
-        <th>Genre</th>
-        <th>Type</th>
-        <th>Rating</th>
-        <th>Actions</th>
-    </tr>
-    <c:forEach var="a" items="${apps}">
-        <tr>
-            <td>${a.appId}</td>
-            <td>${a.appName}</td>
-            <td>${a.appOwnerId}</td>
-            <td>${a.genre}</td>
-            <td>${a.appType}</td>
-            <td>${a.rating}</td>
-            <td>
-                <form action="${pageContext.request.contextPath}/admins-ui/apps/${a.appId}/delete"
-                      method="post" style="display:inline">
-                    <button type="submit" class="btn-delete">Delete</button>
-                </form>
-            </td>
-        </tr>
-    </c:forEach>
-</table>
-
-<!-- OWNERS SECTION -->
-<div class="section-title">App Owners</div>
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Username</th>
-        <th>Email</th>
-        <th>Mobile</th>
-        <th>Actions</th>
-    </tr>
-    <c:forEach items="${owners}" var="owner">
-    <tr>
-        <td>${owner.appOwnerId}</td>
-        <td>${owner.firstName} ${owner.lastName}</td>
-        <td>${owner.userName}</td>
-        <td>${owner.email}</td>
-        <td>${owner.mobile}</td>
-        <td>
-            <a href="/admin/owners/delete/${owner.appOwnerId}" class="btn-delete">Delete</a> <!-- -btn btn-danger -->
-        </td>
-    </tr>
-</c:forEach>
-
-</table>
-
 </body>
 </html>

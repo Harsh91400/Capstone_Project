@@ -129,6 +129,25 @@ public class AdminUIController {
         }
         return "redirect:/admins-ui/dashboard";
     }
+    
+ // ------------ ADMIN: ACTIVATE USER ------------
+    @PostMapping("/users/{id}/activate")
+    public String activateUser(@PathVariable("id") Long id,
+                               RedirectAttributes ra) {
+        try {
+            restTemplate.exchange(
+                    backendBase + "/users/" + id + "/activate",
+                    HttpMethod.PUT,
+                    null,
+                    Void.class
+            );
+            ra.addFlashAttribute("message", "User activated: " + id);
+        } catch (Exception e) {
+            ra.addFlashAttribute("message", "Failed to activate user: " + e.getMessage());
+        }
+        return "redirect:/admins-ui/dashboard";
+    }
+
 
     
     @PostMapping("/apps/{id}/delete")

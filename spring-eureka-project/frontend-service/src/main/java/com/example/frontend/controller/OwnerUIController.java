@@ -34,7 +34,7 @@ public class OwnerUIController {
             String json = String.format("{\"firstName\":\"%s\",\"lastName\":\"%s\",\"userName\":\"%s\",\"password\":\"%s\",\"email\":\"%s\",\"mobile\":\"%s\",\"address1\":\"%s\",\"address2\":\"%s\",\"city\":\"%s\",\"state\":\"%s\",\"zipCode\":\"%s\",\"country\":\"%s\"}", params.getOrDefault("firstName",""), params.getOrDefault("lastName",""), params.getOrDefault("userName",""), params.getOrDefault("password",""), params.getOrDefault("email",""), params.getOrDefault("mobile",""), params.getOrDefault("address1",""), params.getOrDefault("address2",""), params.getOrDefault("city",""), params.getOrDefault("state",""), params.getOrDefault("zipCode",""), params.getOrDefault("country",""));
             HttpEntity<String> entity = new HttpEntity<>(json, headers);
             ResponseEntity<String> resp = restTemplate.postForEntity(backendBase + "/owners/add", entity, String.class);
-            model.addAttribute("message", "Owner register: " + resp.getBody());
+            model.addAttribute("message", "Registered successfully... ");
         } catch(Exception e) {
             model.addAttribute("message", "Error: " + e.getMessage());
         }
