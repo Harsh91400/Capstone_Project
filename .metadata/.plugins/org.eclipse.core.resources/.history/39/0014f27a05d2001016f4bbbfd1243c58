@@ -1,0 +1,133 @@
+package com.example.frontend.controller;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.*;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriUtils;
+
+import javax.servlet.http.HttpSession;
+import java.nio.charset.StandardCharsets;
+
+@Controller
+public class OwnerUIController {
+
+    @Value("${backend.base.url}")
+    private String backendBaseUrl;
+
+    // GET  /owners-ui/login
+    @GetMapping("/owners-ui/login")
+    public String showOwnerLogin(@RequestParam(value = "error", required = false) String error,
+                                 Model model) {
+        if (error != null) {
+            model.addAttribute("error", error);
+        }
+        return "owner-login";
+    }
+
+    // POST /owners-ui/login
+    @PostMapping("/owners-ui/login")
+    public String doLogin(@RequestParam("userName") String userName,
+                          @RequestParam("password") String password,
+                          HttpSession session,
+                          Model model,
+                          RedirectAttributes redirectAttributes) {
+
+        String loginUrl = backendBaseUrl + "/owners/login";
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("userName", userName);
+        form.add("password", password);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> requestEntity =
+                new HttpEntity<>(form, headers);
+
+        try {
+            ResponseEntity<String> response =
+                    restTemplate.postForEntity(loginUrl, requestEntity, String.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                session.setAttribute("loggedInOwner", userName);
+                redirectAttributes.addAttribute("userName", userName);
+                return "redirect:/owners-ui/dashboard";
+            } else if (response.getStatusCodeValue() == 401) {
+                model.addAttribute("error", "Invalid username or password");
+                return "owner-login";
+            } else {
+                model.addAttribute("error", "Login service unavailable");
+                return "owner-login";
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            model.addAttribute("error", "Something went wrong during login");
+            return "owner-login";
+        }
+    }
+
+    // Dashboard
+    @GetMapping("/owners-ui/dashboard")
+    public String ownerDashboard(@RequestParam("userName") String userName,
+                                 Model model,
+                                 HttpSession session) {
+
+        Object loggedIn = session.getAttribute("loggedInOwner");
+        if (loggedIn == null || !userName.equals(loggedIn.toString())) {
+            return "redirect:/owners-ui/login";
+        }
+
+        model.addAttribute("ownerUserName", userName);
+        return "owner-dashboard";
+    }
+
+    // AJAX: apps list
+    @GetMapping("/owners-ui/apps")
+    @ResponseBody
+    public ResponseEntity<String> getOwnerApps(@RequestParam("userName") String userName) {
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        String encodedUser = UriUtils.encode(userName, StandardCharsets.UTF_8);
+        String url = backendBaseUrl + "/owners/" + encodedUser + "/apps";
+
+        try {
+            ResponseEntity<String> response =
+                    restTemplate.getForEntity(url, String.class);
+
+            return ResponseEntity
+                    .status(response.getStatusCode())
+                    .body(response.getBody());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("[]");
+        }
+    }
+
+    // ✅ Owner ke liye Add App form
+    @GetMapping("/owners-ui/add-owner-app")
+    public String showOwnerAddAppForm(HttpSession session) {
+        Object loggedIn = session.getAttribute("loggedInOwner");
+        if (loggedIn == null) {
+            return "redirect:/owners-ui/login";
+        }
+        // same add-app.jsp reuse kar rahe hain
+        return "add-app";
+    }
+
+    @GetMapping("/owners-ui/logout")
+    public String logout(HttpSession session) {
+        session.invalidate();
+        return "redirect:/owners-ui/login";
+    }
+}

@@ -1,0 +1,91 @@
+package com.example.frontend.controller;
+
+import com.example.frontend.util.SessionUtil;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.*;
+
+import javax.servlet.http.HttpSession;
+import java.util.Map;
+
+@Controller
+@RequestMapping("/owners-ui")
+public class OwnerUIController {
+
+    private final RestTemplate restTemplate;
+    private final String backendBase;
+
+    public OwnerUIController(RestTemplate restTemplate, @Value("${backend.base.url}") String backendBase) {
+        this.restTemplate = restTemplate;
+        this.backendBase = backendBase;
+    }
+
+    @GetMapping("/register")
+    public String showRegister() { return "owner-register"; }
+
+    @PostMapping("/register")
+    public String doRegister(@RequestParam Map<String,String> params, Model model) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            String json = String.format("{\"firstName\":\"%s\",\"lastName\":\"%s\",\"userName\":\"%s\",\"password\":\"%s\",\"email\":\"%s\",\"mobile\":\"%s\",\"address1\":\"%s\",\"address2\":\"%s\",\"city\":\"%s\",\"state\":\"%s\",\"zipCode\":\"%s\",\"country\":\"%s\"}", params.getOrDefault("firstName",""), params.getOrDefault("lastName",""), params.getOrDefault("userName",""), params.getOrDefault("password",""), params.getOrDefault("email",""), params.getOrDefault("mobile",""), params.getOrDefault("address1",""), params.getOrDefault("address2",""), params.getOrDefault("city",""), params.getOrDefault("state",""), params.getOrDefault("zipCode",""), params.getOrDefault("country",""));
+            HttpEntity<String> entity = new HttpEntity<>(json, headers);
+            ResponseEntity<String> resp = restTemplate.postForEntity(backendBase + "/owners/add", entity, String.class);
+            model.addAttribute("message", "Registered successfully... ");
+        } catch(Exception e) {
+            model.addAttribute("message", "Error: " + e.getMessage());
+        }
+        return "owner-register";
+    }
+
+    @GetMapping("/login")
+    public String showLogin() { return "owner-login"; }
+
+    @PostMapping("/login")
+    public String doLogin(@RequestParam String userName, @RequestParam String password, HttpSession session, Model model) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            String json = String.format("{\"userName\":\"%s\",\"password\":\"%s\"}", userName, password);
+            HttpEntity<String> entity = new HttpEntity<>(json, headers);
+            ResponseEntity<String> resp = restTemplate.postForEntity(backendBase + "/owners/login", entity, String.class);
+            if(resp.getStatusCode().is2xxSuccessful()) {
+                SessionUtil.setUser(session, "OWNER", null, userName);
+                model.addAttribute("message", "Owner login successful");
+            } else {
+                model.addAttribute("message", "Login failed: " + resp.getBody());
+            }
+        } catch(Exception e) {
+            model.addAttribute("message", "Error: " + e.getMessage());
+        }
+        return "owner-login";
+    }
+
+    @GetMapping("/add-app")
+    public String showAddApp() { return "add-app"; }
+
+    @PostMapping("/add-app")
+    public String doAddApp(@RequestParam Map<String,String> params, HttpSession session, Model model) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            String json = String.format("{\"appName\":\"%s\",\"appType\":\"%s\",\"description\":\"%s\",\"genre\":\"%s\",\"rating\":%s,\"releaseDate\":\"%s\",\"version\":\"%s\"}", params.getOrDefault("appName",""), params.getOrDefault("appType","Free"), params.getOrDefault("description",""), params.getOrDefault("genre",""), params.getOrDefault("rating","0"), params.getOrDefault("releaseDate","2023-01-01"), params.getOrDefault("version","1.0"));
+            HttpEntity<String> entity = new HttpEntity<>(json, headers);
+            ResponseEntity<String> resp = restTemplate.postForEntity(backendBase + "/apps/add", entity, String.class);
+            model.addAttribute("message", "Add app response: " + resp.getBody());
+        } catch(Exception e) {
+            model.addAttribute("message", "Error: " + e.getMessage());
+        }
+        return "add-app";
+    }
+    
+    @GetMapping("/dashboard")
+    public String ownerDashboard(@RequestParam("userName") String userName,
+                                 Model model) {
+        model.addAttribute("ownerUserName", userName);
+        return "owner-dashboard";   // owner-dashboard.jsp
+    }
+}

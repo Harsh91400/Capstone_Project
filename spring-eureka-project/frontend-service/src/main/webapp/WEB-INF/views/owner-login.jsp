@@ -4,7 +4,6 @@
 <head>
     <title>Owner Login</title>
     <style>
-        /* same CSS as user-login, you can reuse exactly */
         body {
             font-family: 'Poppins', sans-serif;
             background: radial-gradient(circle at top, #1e293b 0, #020617 45%, #000 100%);
@@ -52,21 +51,24 @@
             <div class="msg">${message}</div>
         </c:if>
 
-        <form action="${pageContext.request.contextPath}/owners-ui/login" method="post">
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" name="userName" required />
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" required />
-            </div>
-            <button type="submit" class="btn-primary">Login</button>
-        </form>
+       <form action="${pageContext.request.contextPath}/owners-ui/login" method="post">
+    <div class="field">
+        <label>Username</label>
+        <input type="text" name="userName" required/>
+    </div>
+    <div class="field">
+        <label>Password</label>
+        <input type="password" name="password" required/>
+    </div>
+    <button type="submit" class="btn-primary">Login</button>
+</form>
+
 
         <form action="${pageContext.request.contextPath}/owners-ui/register" method="get">
-            <button type="submit" class="btn-secondary">New Owner? Register Here</button>
-        </form>
+    <button type="submit" class="btn-secondary">New Owner? Register Here</button>
+</form>
+
+
     </div>
 </div>
 
