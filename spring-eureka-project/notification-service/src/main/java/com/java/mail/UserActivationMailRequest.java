@@ -1,6 +1,7 @@
 package com.java.mail;
 
 public class UserActivationMailRequest {
+
     private String email;
     private String firstName;
     private String userName;

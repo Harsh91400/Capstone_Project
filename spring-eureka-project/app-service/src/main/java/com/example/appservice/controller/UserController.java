@@ -1,12 +1,14 @@
 package com.example.appservice.controller;
 
 import com.example.appservice.model.User;
+import com.example.appservice.model.UserActivationMailRequest;
 import com.example.appservice.repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,18 +16,23 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
+@CrossOrigin(origins = "http://localhost:3001")
 public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private RestTemplate restTemplate;
 
-    // -------------------- ADD USER --------------------
+    // --------- NEW USER REGISTRATION ----------
     @PostMapping("/add")
     public ResponseEntity<?> addUser(@RequestBody User user){
         try {
             if(user.getDateOfOpen() == null) {
                 user.setDateOfOpen(LocalDate.now());
             }
+            user.setStatus("INACTIVE");
             User savedUser = userRepository.save(user);
             return ResponseEntity.ok(savedUser);
         } catch(Exception e) {
@@ -34,26 +41,33 @@ public class UserController {
         }
     }
 
-    // -------------------- LOGIN --------------------
+    // --------- LOGIN ----------
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User payload){
-        Optional<User> user = userRepository.findByUserName(payload.getUserName());
+        Optional<User> userOpt = userRepository.findByUserName(payload.getUserName());
 
-        if(user.isPresent() && user.get().getPassword().equals(payload.getPassword())){
+        if(userOpt.isPresent() && userOpt.get().getPassword().equals(payload.getPassword())) {
+            User user = userOpt.get();
+
+            if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Your account is INACTIVE. Please contact admin.");
+            }
+
             return ResponseEntity.ok("OK: User logged in");
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body("FAIL: Invalid username or password");
     }
 
-    // -------------------- GET ALL USERS --------------------
+    // --------- ALL USERS ----------
     @GetMapping("/all")
     public ResponseEntity<?> getAllUsers() {
         List<User> users = userRepository.findAll();
         return ResponseEntity.ok(users);
     }
 
-    // -------------------- GET USER BY ID --------------------
+    // --------- USER BY ID ----------
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
         Optional<User> user = userRepository.findById(id);
@@ -66,4 +80,45 @@ public class UserController {
         }
     }
 
+    // --------- DELETE USER ----------
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        if (!userRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        userRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // --------- ADMIN: ACTIVATE USER ----------
+    @PutMapping("/{id}/activate")
+    public ResponseEntity<?> activateUser(@PathVariable Long id) {
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User not found with ID: " + id);
+        }
+        
+        User user = optionalUser.get();
+        user.setStatus("ACTIVE");
+        User updated = userRepository.save(user);
+        
+        // ✅ Mail sending code
+        UserActivationMailRequest req = new UserActivationMailRequest();
+        req.setEmail(user.getEmail());
+        req.setFirstName(user.getFirstName());
+        req.setUserName(user.getUserName());
+        
+        String url = "http://localhost:8082/mail/user-activated";
+        
+        try {
+            ResponseEntity<String> resp = restTemplate.postForEntity(url, req, String.class);
+            System.out.println("Mail sent successfully");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        
+        return ResponseEntity.ok(updated);
+    }
 }

@@ -1,10 +1,7 @@
 package com.java.mail;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/mail")
@@ -16,9 +13,19 @@ public class MailController {
         this.mailService = mailService;
     }
 
+    
     @PostMapping("/user-activated")
-    public ResponseEntity<?> sendUserActivatedMail(@RequestBody UserActivationMailRequest request) {
+    public ResponseEntity<String> sendUserActivatedMail(@RequestBody UserActivationMailRequest request) {
+
+        System.out.println("=== /mail/user-activated HIT from app-service ===");
+        System.out.println("email     = " + request.getEmail());
+        System.out.println("firstName = " + request.getFirstName());
+        System.out.println("userName  = " + request.getUserName());
+
         mailService.sendUserActivatedMail(request);
-        return ResponseEntity.ok("Mail sent");
+
+        System.out.println("=== MailService.sendUserActivatedMail() CALLED ===");
+
+        return ResponseEntity.ok("Activation mail sent to user.");
     }
 }

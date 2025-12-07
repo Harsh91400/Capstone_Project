@@ -4,20 +4,32 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
+@Table(name = "USER_APP")   
 public class UserApp {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "USER_APP_ID")      
     private Long userAppId;
+
+    @Column(name = "USER_ID")
     private Long userId;
+
+    @Column(name = "APP_ID")
     private Long appId;
+
+    @Column(name = "DOWNLOAD_DATE")
     private LocalDate downloadDate;
 
     public Long getUserAppId() { return userAppId; }
     public void setUserAppId(Long userAppId) { this.userAppId = userAppId; }
+
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
+
     public Long getAppId() { return appId; }
     public void setAppId(Long appId) { this.appId = appId; }
+
     public LocalDate getDownloadDate() { return downloadDate; }
     public void setDownloadDate(LocalDate downloadDate) { this.downloadDate = downloadDate; }
 }

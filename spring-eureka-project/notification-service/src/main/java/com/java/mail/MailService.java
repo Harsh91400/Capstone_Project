@@ -26,11 +26,11 @@ public class MailService {
                 ? req.getFirstName()
                 : req.getUserName();
 
-        message.setSubject("Your App Store Account is Active");
+        // Subject jo aap chaho
+        message.setSubject("Your account has been created");
 
         String body = "Hi " + name + ",\n\n"
-                + "Your App Store account has been successfully activated by the admin.\n"
-                + "You can now log in using your username and password.\n\n"
+                + "Your account has been created. Now you can login using your username and password.\n\n"
                 + "Regards,\n"
                 + "App Store Team";
 

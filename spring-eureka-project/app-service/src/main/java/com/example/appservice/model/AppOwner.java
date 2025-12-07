@@ -3,28 +3,63 @@ package com.example.appservice.model;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "APP_OWNER")
 public class AppOwner {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long appOwnerId;
+    @Column(name = "APP_OWNER_ID")
+    private Integer appOwnerId;
+
+    @Column(name = "FIRST_NAME")
     private String firstName;
+
+    @Column(name = "LAST_NAME")
     private String lastName;
+
+    @Column(name = "USER_NAME", unique = true)
     private String userName;
+
+    @Column(name = "PASSWORD")
     private String password;
+
+    @Column(name = "EMAIL")
     private String email;
+
+    @Column(name = "MOBILE")
     private String mobile;
+
+    @Column(name = "ADDRESS1")
     private String address1;
+
+    @Column(name = "ADDRESS2")
     private String address2;
+
+    @Column(name = "CITY")
     private String city;
+
+    @Column(name = "STATE")
     private String state;
+
+    @Column(name = "ZIP_CODE")
     private String zipCode;
+
+    @Column(name = "COUNTRY")
     private String country;
 
     // getters and setters
-    public Long getAppOwnerId() { return appOwnerId; }
-    public void setAppOwnerId(Long appOwnerId) { this.appOwnerId = appOwnerId; }
-    public String getFirstName() { return firstName; }
-    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public Integer getAppOwnerId() { 
+    	return appOwnerId; 
+    }
+    public void setAppOwnerId(Integer appOwnerId) { 
+    	this.appOwnerId = appOwnerId; 
+    }
+    public String getFirstName() { 
+    	return firstName; 
+    }
+    public void setFirstName(String firstName) { 
+    	this.firstName = firstName; 
+    }
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
     public String getUserName() { return userName; }

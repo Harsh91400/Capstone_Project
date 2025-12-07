@@ -3,13 +3,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Spring Boot parent -->
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.0</version>
-        <relativePath/>
-    </parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.2.5</version>
+    <relativePath/> <!-- lookup parent from repository -->
+</parent>
 
     <groupId>com.java.mail</groupId>
     <artifactId>notification-service</artifactId>
@@ -20,35 +19,42 @@
 
     <properties>
         <java.version>17</java.version>
+        <!-- Spring Cloud release train compatible with Boot 3.x -->
         <spring-cloud.version>2023.0.0</spring-cloud.version>
     </properties>
 
     <dependencies>
-        <!-- REST endpoints, JSON etc. -->
+        <!-- REST APIs, JSON, embedded Tomcat -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Mail sending (JavaMailSender) -->
+        <!-- Mail sending support (JavaMailSender) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
-        <!-- Eureka client so service register ho sake -->
+        <!-- Eureka client: @EnableEurekaClient / @EnableDiscoveryClient -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
-        <!-- Optional: monitoring endpoints (/actuator/health etc.) -->
+        <!-- Optional: load-balancing if you call other services via service-id -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
+
+        <!-- Optional: health / actuator endpoints -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- Optional: Lombok for getters/setters (IDE plugin bhi chahiye) -->
+        <!-- Optional: Lombok (if you want to use it) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -61,14 +67,9 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-        	<groupId>com.example</groupId>
-        	<artifactId>frontend-service</artifactId>
-        	<version>1.0.0</version>
-        </dependency>
     </dependencies>
 
-    <!-- Spring Cloud BOM (for Eureka etc.) -->
+    <!-- Spring Cloud BOM so versions match Boot version -->
     <dependencyManagement>
         <dependencies>
             <dependency>

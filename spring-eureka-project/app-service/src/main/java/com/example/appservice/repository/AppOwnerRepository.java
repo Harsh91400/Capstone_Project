@@ -1,10 +1,19 @@
-
 package com.example.appservice.repository;
 
 import com.example.appservice.model.AppOwner;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface AppOwnerRepository extends JpaRepository<AppOwner, Long> {
+
+    AppOwner findByUserName(String userName);
+
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM APP_OWNER WHERE APP_OWNER_ID = ?1", nativeQuery = true)
+    void deleteOwnerById(Long id);
 }

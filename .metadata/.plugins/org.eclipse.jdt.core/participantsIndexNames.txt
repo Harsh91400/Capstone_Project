@@ -1,3 +1,0 @@
-INDEX VERSION 1.134
-D:\Wipro\Dummy_capstone_2\.metadata\.plugins\org.eclipse.jst.jsp.core\jspsearch\1619498648.index
-\frontend-service\src\main\java
