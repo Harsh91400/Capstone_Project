@@ -1,0 +1,22 @@
+package com.java.mail;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/mail")
+public class MailController {
+
+    private final MailService mailService;
+
+    public MailController(MailService mailService) {
+        this.mailService = mailService;
+    }
+
+    // Will be triggered when admin activates a user
+    @PostMapping("/user-activated")
+    public ResponseEntity<String> sendUserActivatedMail(@RequestBody UserActivationMailRequest request) {
+        mailService.sendUserActivatedMail(request);
+        return ResponseEntity.ok("Activation mail sent to user.");
+    }
+}

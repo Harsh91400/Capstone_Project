@@ -1,0 +1,71 @@
+package com.example.appservice.security;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfig {
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configure(http))
+            
+            .authorizeHttpRequests(auth -> auth
+                // ========== PUBLIC ENDPOINTS (NO TOKEN REQUIRED) ==========
+                
+                // H2 Console
+                .requestMatchers("/h2-console/**").permitAll()
+                
+                // Login & Registration endpoints
+                .requestMatchers(HttpMethod.POST, "/users/add").permitAll()
+                .requestMatchers(HttpMethod.POST, "/users/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/admins/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/admins/add").permitAll()
+                .requestMatchers(HttpMethod.POST, "/owners/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/owners/add").permitAll()
+                
+                // ========== PROTECTED ENDPOINTS (JWT TOKEN REQUIRED) ==========
+                
+                // Admin endpoints
+                .requestMatchers("/admins/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/users/all").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/users/*/activate").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/admins/users/*/activate").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/users/*").hasRole("ADMIN")
+                
+                // User endpoints
+                .requestMatchers(HttpMethod.GET, "/users/*").hasAnyRole("USER", "ADMIN")
+                
+                // Owner endpoints
+                .requestMatchers("/owners/**").hasAnyRole("OWNER", "ADMIN")
+                
+                // ========== ALL OTHER REQUESTS NEED AUTHENTICATION ==========
+                .anyRequest().authenticated()
+            )
+            
+            .sessionManagement(session -> 
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            
+            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
+
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+}

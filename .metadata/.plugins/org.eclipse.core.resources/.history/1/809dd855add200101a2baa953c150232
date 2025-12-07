@@ -1,0 +1,98 @@
+package com.example.appservice.controller;
+
+import com.example.appservice.model.Admin;
+import com.example.appservice.model.User;
+import com.example.appservice.model.UserActivationMailRequest;
+import com.example.appservice.repository.AdminRepository;
+import com.example.appservice.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/admins")
+public class AdminController {
+
+    @Autowired
+    private AdminRepository adminRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @PostMapping("/add")
+    public Admin addAdmin(@RequestBody Admin admin){
+        admin.setAdminStatus("YES");
+        return adminRepository.save(admin);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody Admin payload){
+        try {
+            if (payload.getUserName() == null || payload.getPassword() == null) {
+                return ResponseEntity.badRequest().body("MISSING_CREDENTIALS");
+            }
+
+            Optional<Admin> adminOpt = adminRepository.findByUserName(payload.getUserName());
+
+            if (!adminOpt.isPresent()) {
+                return ResponseEntity.status(404).body("ADMIN_NOT_FOUND");
+            }
+
+            Admin admin = adminOpt.get();
+
+            if (!payload.getPassword().equals(admin.getPassword())) {
+                return ResponseEntity.status(401).body("WRONG_PASSWORD");
+            }
+
+            return ResponseEntity.ok("OK");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body("ERROR:" + e.getMessage());
+        }
+    }
+
+    @PostMapping("/activate-user/{id}")
+    public ResponseEntity<String> activateUser(@PathVariable Long id) {
+
+        System.out.println("Activate request for user id: " + id);
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
+
+        System.out.println("Current user status: " + user.getStatus());
+
+        user.setStatus("ACTIVE");
+        userRepository.save(user);
+
+        System.out.println("User status updated to ACTIVE, preparing mail request");
+
+        UserActivationMailRequest req = new UserActivationMailRequest();
+        req.setEmail(user.getEmail());
+        req.setFirstName(user.getFirstName());
+        req.setUserName(user.getUserName());
+
+        // ⚠️ YAHI LINE IMPORTANT HAI
+        String url = "http://localhost:8082/mail/user-activated";
+        
+
+        try {
+            System.out.println("Calling notification-service: " + url);
+            ResponseEntity<String> res = restTemplate.postForEntity(url, req, String.class);
+            System.out.println("Mail request sent successfully to notification-service, response = " + res.getBody());
+            return ResponseEntity.ok("USER ACTIVATED, MAIL SENT");
+        } catch (Exception ex) {
+            System.out.println("Error while calling notification-service");
+            ex.printStackTrace();
+            return ResponseEntity.ok("USER ACTIVATED, BUT MAIL FAILED: " + ex.getMessage());
+        }
+    }
+
+}

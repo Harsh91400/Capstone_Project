@@ -1,0 +1,88 @@
+package com.example.appservice.controller;
+
+import com.example.appservice.dto.DownloadRequest;
+import com.example.appservice.model.UserApp;
+import com.example.appservice.model.User;
+import com.example.appservice.model.AppDetails;
+import com.example.appservice.repository.UserAppRepository;
+import com.example.appservice.repository.UserRepository;
+import com.example.appservice.repository.AppDetailsRepository;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+public class DownloadController {
+
+    private final UserRepository userRepository;
+    private final AppDetailsRepository appDetailsRepository;
+    private final UserAppRepository userAppRepository;
+
+    public DownloadController(UserRepository userRepository,
+                              AppDetailsRepository appDetailsRepository,
+                              UserAppRepository userAppRepository) {
+        this.userRepository = userRepository;
+        this.appDetailsRepository = appDetailsRepository;
+        this.userAppRepository = userAppRepository;
+    }
+
+    // ====== DOWNLOAD CREATE: USER_APP me row insert ======
+    @PostMapping("/downloads")
+    public ResponseEntity<?> createDownload(@RequestBody DownloadRequest req) {
+
+        // 1) userName se user nikalo (Optional version)
+        Optional<User> userOpt = userRepository.findByUserName(req.getUserName());
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User not found: " + req.getUserName());
+        }
+        User user = userOpt.get();
+
+        // 2) App check karo
+        Optional<AppDetails> appOpt = appDetailsRepository.findById(req.getAppId());
+        if (appOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("App not found: " + req.getAppId());
+        }
+        AppDetails app = appOpt.get();
+
+        // Prevent duplicate download
+        if (userAppRepository.existsByUserIdAndAppId(user.getUserId(), app.getAppId())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("App already downloaded by this user");
+        }
+
+        // 3) USER_APP record save karo
+        UserApp ua = new UserApp();
+        ua.setUserId(user.getUserId());
+        ua.setAppId(app.getAppId());
+        ua.setDownloadDate(LocalDate.now());
+
+        UserApp saved = userAppRepository.save(ua);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+
+    // ====== PARTICULAR USER ke sare downloads ======
+    @GetMapping("/downloads/{userName}")
+    public ResponseEntity<?> getDownloads(@PathVariable String userName) {
+
+        // Optional<User> milega
+        Optional<User> userOpt = userRepository.findByUserName(userName);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User not found: " + userName);
+        }
+
+        User user = userOpt.get();  // safe get() because checked above
+
+        // particular user ke downloaded apps
+        List<UserApp> list = userAppRepository.findByUserId(user.getUserId());
+        return ResponseEntity.ok(list);
+    }
+
+}

@@ -1,0 +1,5 @@
+package com.example.appservice.security;
+
+public class JwtAuthenticationFilter {
+
+}

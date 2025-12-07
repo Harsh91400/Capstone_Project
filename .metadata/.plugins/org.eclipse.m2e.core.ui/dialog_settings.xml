@@ -2,7 +2,9 @@
 <section name="Workbench">
 	<section name="MavenProjectImportWizardPage">
 		<list key="rootDirectory">
+			<item value="C:\Users\harsh\Downloads\notification-service"/>
 			<item value="D:\Wipro\Dummy_capstone_2\spring-eureka-project"/>
+			<item value="D:\Wipro\Dummy_capstone_2\spring-eureka-project\"/>
 			<item value="D:\Wipro\Dummy_capstone\spring-eureka-project"/>
 		</list>
 		<list key="projectNameTemplate">

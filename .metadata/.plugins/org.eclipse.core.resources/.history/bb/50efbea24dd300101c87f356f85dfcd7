@@ -1,0 +1,64 @@
+package com.example.appservice.security;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfig {
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable()) // CSRF disable for REST API
+            .cors(cors -> cors.configure(http)) // CORS enable (WebConfig se)
+            
+            .authorizeHttpRequests(auth -> auth
+                // Public endpoints (bina token ke access ho sake)
+                .requestMatchers(
+                    new AntPathRequestMatcher("/users/add"),
+                    new AntPathRequestMatcher("/users/login"),
+                    new AntPathRequestMatcher("/admins/login"),
+                    new AntPathRequestMatcher("/admins/add"),
+                    new AntPathRequestMatcher("/owners/login"),
+                    new AntPathRequestMatcher("/owners/add"),
+                    new AntPathRequestMatcher("/h2-console/**")
+                ).permitAll()
+                
+                // Admin-only endpoints
+                .requestMatchers(new AntPathRequestMatcher("/admins/**")).hasRole("ADMIN")
+                .requestMatchers(new AntPathRequestMatcher("/users/all")).hasRole("ADMIN")
+                .requestMatchers(new AntPathRequestMatcher("/users/{id}/activate")).hasRole("ADMIN")
+                .requestMatchers(new AntPathRequestMatcher("/users/{id}")).hasAnyRole("USER", "ADMIN")
+                .requestMatchers(new AntPathRequestMatcher("/owners/**")).hasAnyRole("OWNER", "ADMIN")
+                
+                // Baaki sab endpoints authenticated hone chahiye
+                .anyRequest().authenticated()
+            )
+            
+            // Stateless session (JWT ke liye)
+            .sessionManagement(session -> 
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            
+            // H2 console ke liye frames allow karo
+            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
+
+        // JWT filter add karo
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+}

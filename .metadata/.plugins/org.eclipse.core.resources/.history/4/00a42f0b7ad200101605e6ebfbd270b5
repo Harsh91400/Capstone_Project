@@ -1,0 +1,99 @@
+package com.example.appservice.controller;
+
+import com.example.appservice.model.Admin;
+import com.example.appservice.model.User;
+import com.example.appservice.model.UserActivationMailRequest;
+import com.example.appservice.repository.AdminRepository;
+import com.example.appservice.repository.UserRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/admins")
+public class AdminController {
+
+    @Autowired
+    private AdminRepository adminRepository;
+
+    @Autowired
+    private UserRepository userRepository;   // 👉 User DB ke liye
+
+    @Autowired
+    private RestTemplate restTemplate;       // 👉 Notification-service call ke liye
+
+    // ======================================
+    //  ADD ADMIN
+    // ======================================
+    @PostMapping("/add")
+    public Admin addAdmin(@RequestBody Admin admin){
+        admin.setAdminStatus("YES");
+        return adminRepository.save(admin);
+    }
+
+    // ======================================
+    //  LOGIN
+    // ======================================
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody Admin payload){
+        try {
+            if (payload.getUserName() == null || payload.getPassword() == null) {
+                return ResponseEntity.badRequest().body("MISSING_CREDENTIALS");
+            }
+
+            Optional<Admin> adminOpt = adminRepository.findByUserName(payload.getUserName());
+
+            if (!adminOpt.isPresent()) {
+                return ResponseEntity.status(404).body("ADMIN_NOT_FOUND");
+            }
+
+            Admin admin = adminOpt.get();
+
+            if (!payload.getPassword().equals(admin.getPassword())) {
+                return ResponseEntity.status(401).body("WRONG_PASSWORD");
+            }
+
+            return ResponseEntity.ok("OK");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body("ERROR:" + e.getMessage());
+        }
+    }
+
+    // ======================================
+    //  ACTIVATE USER + SEND MAIL
+    // ======================================
+    @PostMapping("/activate-user/{id}")
+    public ResponseEntity<String> activateUser(@PathVariable Long id) {
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
+
+        // Check already active or not
+        if (!"ACTIVE".equalsIgnoreCase(user.getUserStatus())) { // <-- aapke field ke hisaab se
+            user.setUserStatus("ACTIVE");                     // <-- change if your field is different
+            userRepository.save(user);
+
+            // === MAIL REQUEST OBJECT BANATE HAI ===
+            UserActivationMailRequest req = new UserActivationMailRequest();
+            req.setEmail(user.getEmail());
+            req.setFirstName(user.getFirstName());
+            req.setUserName(user.getUserName());
+
+            // === CALL NOTIFICATION SERVICE ===
+            String url = "http://notification-service/mail/user-activated"; // Eureka name
+            restTemplate.postForEntity(url, req, String.class);
+
+            return ResponseEntity.ok("USER ACTIVATED, MAIL SENT");
+        }
+
+        return ResponseEntity.ok("USER ALREADY ACTIVE");
+    }
+
+}

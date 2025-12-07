@@ -1,0 +1,30 @@
+#==================================================================================================================
+server.port=8081
+spring.application.name=app-service
+
+# ==== H2 in-memory DB (NO file lock issues) ====
+spring.datasource.url=jdbc:h2:mem:appdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+
+# ==== Eureka Client ====
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka/
+eureka.client.register-with-eureka=true
+eureka.client.fetch-registry=true
+eureka.instance.prefer-ip-address=true
+
+# ==== JWT Configuration ====
+jwt.secret=mySecretKeyForJWTTokenGenerationAndValidation123456789
+jwt.expiration=86400000
+# 86400000 ms = 24 hours
+
+spring.security.user.name=disabled
+spring.security.user.password=disabled
+spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration

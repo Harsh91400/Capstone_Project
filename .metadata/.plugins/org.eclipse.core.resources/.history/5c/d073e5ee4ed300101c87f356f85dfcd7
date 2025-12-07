@@ -1,0 +1,71 @@
+package com.example.appservice.security;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfig {
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configure(http))
+            
+            .authorizeHttpRequests(auth -> auth
+                // ========== PUBLIC ENDPOINTS ==========
+                
+                // H2 Console
+                .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
+                
+                // Login & Registration endpoints
+                .requestMatchers(new AntPathRequestMatcher("/users/add", HttpMethod.POST.name())).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/users/login", HttpMethod.POST.name())).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/admins/login", HttpMethod.POST.name())).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/admins/add", HttpMethod.POST.name())).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/owners/login", HttpMethod.POST.name())).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/owners/add", HttpMethod.POST.name())).permitAll()
+                
+                // ========== PROTECTED ENDPOINTS ==========
+                
+                // Admin endpoints
+                .requestMatchers(new AntPathRequestMatcher("/admins/**")).hasRole("ADMIN")
+                .requestMatchers(new AntPathRequestMatcher("/users/all", HttpMethod.GET.name())).hasRole("ADMIN")
+                .requestMatchers(new AntPathRequestMatcher("/users/*/activate", HttpMethod.PUT.name())).hasRole("ADMIN")
+                .requestMatchers(new AntPathRequestMatcher("/users/*", HttpMethod.DELETE.name())).hasRole("ADMIN")
+                
+                // User endpoints
+                .requestMatchers(new AntPathRequestMatcher("/users/*", HttpMethod.GET.name())).hasAnyRole("USER", "ADMIN")
+                
+                // Owner endpoints
+                .requestMatchers(new AntPathRequestMatcher("/owners/**")).hasAnyRole("OWNER", "ADMIN")
+                
+                // All other requests need authentication
+                .anyRequest().authenticated()
+            )
+            
+            .sessionManagement(session -> 
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            
+            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
+
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+}
