@@ -2,11 +2,15 @@ package com.example.appservice.controller;
 
 import com.example.appservice.model.AppOwner;
 import com.example.appservice.service.AppOwnerService;
+import com.example.appservice.security.JwtUtil;
 import jakarta.persistence.EntityManager;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -15,11 +19,14 @@ public class AppOwnerController {
 
     private final AppOwnerService appOwnerService;
     private final EntityManager entityManager;
+    private final JwtUtil jwtUtil;   // ✅ JWT util
 
     public AppOwnerController(AppOwnerService appOwnerService,
-                              EntityManager entityManager) {
+                              EntityManager entityManager,
+                              JwtUtil jwtUtil) {
         this.appOwnerService = appOwnerService;
         this.entityManager = entityManager;
+        this.jwtUtil = jwtUtil;
     }
 
     public static class OwnerAppDto {
@@ -29,7 +36,7 @@ public class AppOwnerController {
         private String genre;
 
         public OwnerAppDto() {}
-        
+
         public OwnerAppDto(Long id, String name, String type, String genre) {
             this.id = id;
             this.name = name;
@@ -63,14 +70,43 @@ public class AppOwnerController {
         return ResponseEntity.ok(appOwnerService.getAllOwners());
     }
 
+    // =============== OWNER LOGIN with JWT ===============
     @PostMapping("/login")
-    public ResponseEntity<?> loginOwner(@RequestParam("userName") String userName,
-                                        @RequestParam("password") String password) {
-        AppOwner owner = appOwnerService.getOwnerByUsername(userName);
-        if (owner != null && owner.getPassword().equals(password)) {
-            return ResponseEntity.ok(userName);
+    public ResponseEntity<?> loginOwner(@RequestBody AppOwner payload) {
+        try {
+            String userName = payload.getUserName();
+            String password = payload.getPassword();
+
+            if (userName == null || password == null) {
+                return ResponseEntity.badRequest().body("MISSING_CREDENTIALS");
+            }
+
+            AppOwner owner = appOwnerService.getOwnerByUsername(userName);
+            if (owner == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("OWNER_NOT_FOUND");
+            }
+
+            if (!password.equals(owner.getPassword())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("WRONG_PASSWORD");
+            }
+
+            // ✅ SUCCESS: generate JWT token for ROLE_OWNER
+            String token = jwtUtil.generateToken(owner.getUserName(), "ROLE_OWNER");
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("token", token);
+            body.put("userName", owner.getUserName());
+            body.put("role", "OWNER");
+
+            return ResponseEntity.ok(body);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("ERROR: " + e.getMessage());
         }
-        return ResponseEntity.status(401).body("Invalid username or password");
     }
 
     @GetMapping("/{username}/apps")

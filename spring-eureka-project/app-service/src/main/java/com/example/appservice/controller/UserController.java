@@ -1,8 +1,11 @@
 package com.example.appservice.controller;
 
 import com.example.appservice.model.User;
+
 import com.example.appservice.model.UserActivationMailRequest;
 import com.example.appservice.repository.UserRepository;
+import com.github.andrewoma.dexx.collection.HashMap;
+import com.github.andrewoma.dexx.collection.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,6 +17,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.appservice.security.JwtUtil;
+
 @RestController
 @RequestMapping("/users")
 @CrossOrigin(origins = "http://localhost:3001")
@@ -24,6 +29,9 @@ public class UserController {
     
     @Autowired
     private RestTemplate restTemplate;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // --------- NEW USER REGISTRATION ----------
     @PostMapping("/add")
@@ -42,23 +50,50 @@ public class UserController {
     }
 
     // --------- LOGIN ----------
+ // --------- LOGIN ----------
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User payload){
-        Optional<User> userOpt = userRepository.findByUserName(payload.getUserName());
+    public ResponseEntity<?> login(@RequestBody User payload) {
+        try {
+            if (payload.getUserName() == null || payload.getPassword() == null) {
+                return ResponseEntity.badRequest().body("MISSING_CREDENTIALS");
+            }
 
-        if(userOpt.isPresent() && userOpt.get().getPassword().equals(payload.getPassword())) {
+            Optional<User> userOpt = userRepository.findByUserName(payload.getUserName());
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("USER_NOT_FOUND");
+            }
+
             User user = userOpt.get();
+
+            if (!payload.getPassword().equals(user.getPassword())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("WRONG_PASSWORD");
+            }
 
             if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body("Your account is INACTIVE. Please contact admin.");
             }
 
-            return ResponseEntity.ok("OK: User logged in");
+            // ✅ SUCCESS: generate JWT token for ROLE_USER
+            String token = jwtUtil.generateToken(user.getUserName(), "ROLE_USER");
+
+            // JSON response: { "token": "...", "userName": "...", "role": "USER" }
+            Map<String, Object> body = new HashMap<>();
+            body.put("token", token);
+            body.put("userName", user.getUserName());
+            body.put("role", "USER");
+
+            return ResponseEntity.ok(body);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("ERROR: " + e.getMessage());
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body("FAIL: Invalid username or password");
     }
+
 
     // --------- ALL USERS ----------
     @GetMapping("/all")

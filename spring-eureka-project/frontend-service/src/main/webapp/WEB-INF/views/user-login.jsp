@@ -66,7 +66,6 @@
             cursor: pointer;
             margin-top: 10px;
         }
-        .msg { margin-bottom: 10px; font-size: 12px; color: #fca5a5; text-align: center; }
     </style>
 </head>
 <body>
@@ -76,10 +75,6 @@
 <div class="container">
     <div class="card">
         <h2>User Login</h2>
-
-        <c:if test="${not empty message}">
-            <div class="msg">${message}</div>
-        </c:if>
 
         <form action="${pageContext.request.contextPath}/users-ui/login" method="post">
             <div class="form-group">

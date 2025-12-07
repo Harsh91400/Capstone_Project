@@ -28,7 +28,7 @@ public class UserUIController {
         this.backendBase = backendBase;  // e.g. http://localhost:8081
     }
 
-    // =============== REGISTER (jo pehle tha, wahi rakha hai) ===============
+    // =============== REGISTER (same as before) ===============
     @GetMapping("/register")
     public String showRegister() {
         return "user-register";
@@ -105,16 +105,20 @@ public class UserUIController {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
+
             String json = String.format("{\"userName\":\"%s\",\"password\":\"%s\"}", userName, password);
             HttpEntity<String> entity = new HttpEntity<>(json, headers);
 
             ResponseEntity<String> resp =
                     restTemplate.postForEntity(backendBase + "/users/login", entity, String.class);
 
+            System.out.println("DEBUG: inside doLogin, status = " + resp.getStatusCode());
+            System.out.println("DEBUG: body = " + resp.getBody());
+
             if (resp.getStatusCode().is2xxSuccessful()) {
-                // UserId abhi null hai, backend se mile to set kar sakte ho
-                Integer userId = null;
+                Integer userId = null; // abhi ke liye null
                 SessionUtil.setUser(session, "USER", userId, userName);
+                System.out.println("DEBUG: setting session user = " + userName);
 
                 redirectAttributes.addFlashAttribute("message", "Login successful");
                 return "redirect:/users-ui/dashboard";
@@ -129,11 +133,13 @@ public class UserUIController {
                         "Login failed: " + resp.getStatusCodeValue());
                 return "redirect:/users-ui/login";
             }
+
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error: " + e.getMessage());
             return "redirect:/users-ui/login";
         }
     }
+
 
     // =============== DASHBOARD ===============
     @GetMapping("/dashboard")
@@ -145,27 +151,39 @@ public class UserUIController {
         if (userName == null) {
             return "redirect:/users-ui/login";
         }
+        String jwtToken = SessionUtil.getJwtToken(session);
 
-        // JSP me welcome text ke liye
         model.addAttribute("userName", userName);
 
-        // ---- All Apps ----
         try {
+            HttpHeaders headers = new HttpHeaders();
+            if (jwtToken != null) {
+                headers.set("Authorization", "Bearer " + jwtToken);
+            }
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
             ResponseEntity<List> appsResp =
                     restTemplate.exchange(backendBase + "/apps",
-                            HttpMethod.GET, null, List.class);
+                            HttpMethod.GET, entity, List.class);
+            System.out.println("DEBUG: getUserName from session = " + SessionUtil.getUserName(session));
             model.addAttribute("apps", appsResp.getBody());
         } catch (Exception e) {
             model.addAttribute("apps", List.of());
             model.addAttribute("error", "Cannot load apps: " + e.getMessage());
         }
 
-        // ---- My Downloads ----  *** IMPORTANT FIX ***
+        // ---- My Downloads ----
         try {
-            // yahan pe /downloads/{userName} hit kar rahe hain
+            HttpHeaders headers = new HttpHeaders();
+            if (jwtToken != null) {
+                headers.set("Authorization", "Bearer " + jwtToken);
+            }
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
             ResponseEntity<List> dlResp =
                     restTemplate.exchange(backendBase + "/downloads/" + userName,
-                            HttpMethod.GET, null, List.class);
+                            HttpMethod.GET, entity, List.class);
+            
             model.addAttribute("downloads", dlResp.getBody());
         } catch (Exception e) {
             model.addAttribute("downloads", List.of());
@@ -191,6 +209,7 @@ public class UserUIController {
             redirectAttributes.addFlashAttribute("error", "Please login again.");
             return "redirect:/users-ui/login";
         }
+        String jwtToken = SessionUtil.getJwtToken(session);
 
         String url = backendBase + "/downloads";
 
@@ -200,6 +219,9 @@ public class UserUIController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        if (jwtToken != null) {
+            headers.set("Authorization", "Bearer " + jwtToken);
+        }
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
         try {
@@ -225,10 +247,7 @@ public class UserUIController {
             redirectAttributes.addFlashAttribute("error",
                     "Failed to download app: " + e.getMessage());
         }
-
-        // Important: naya data lane ke liye redirect to /dashboard
         return "redirect:/users-ui/dashboard";
     }
 
-    // (baaki /all, /{id} methods chaho to as-is rakh sakte ho)
 }

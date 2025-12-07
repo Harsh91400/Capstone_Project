@@ -8,9 +8,10 @@ import javax.servlet.http.HttpSession;
 
 @Controller
 public class LogoutController {
-    @GetMapping("/logout")
-    public String logout(HttpSession session){
-        SessionUtil.clear(session);
-        return "redirect:/";
-    }
+	@GetMapping("/logout")
+	public String logout(HttpSession session) {
+	    SessionUtil.clear(session);   
+	    return "redirect:/";          
+	}
+
 }

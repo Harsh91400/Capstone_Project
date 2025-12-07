@@ -33,6 +33,13 @@ public class ViewController {
         }
         return "index";
     }
+    
+//    @GetMapping("/")
+//    public String home() {
+//        return "index";  
+//    }
+    
+    
 
     @GetMapping("/apps/genre")
     public String appsByGenre(@RequestParam("genre") String genre, Model model) {

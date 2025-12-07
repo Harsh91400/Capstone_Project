@@ -1,6 +1,7 @@
 package com.example.appservice.controller;
 
 import com.example.appservice.model.Admin;
+
 import com.example.appservice.model.User;
 import com.example.appservice.model.UserActivationMailRequest;
 import com.example.appservice.repository.AdminRepository;
@@ -9,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import com.example.appservice.security.JwtUtil;
+import java.util.HashMap;
+import java.util.Map;
 
 import java.util.Optional;
 
@@ -24,6 +28,9 @@ public class AdminController {
 
     @Autowired
     private RestTemplate restTemplate;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @PostMapping("/add")
     public Admin addAdmin(@RequestBody Admin admin){
@@ -32,18 +39,16 @@ public class AdminController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Admin payload){
+    public ResponseEntity<?> login(@RequestBody Admin payload) {
         try {
             System.out.println("=== [APP-SERVICE] Admin login hit ===");
-            System.out.println("payload.userName = " + payload.getUserName());
 
             if (payload.getUserName() == null || payload.getPassword() == null) {
                 return ResponseEntity.badRequest().body("MISSING_CREDENTIALS");
             }
 
             Optional<Admin> adminOpt = adminRepository.findByUserName(payload.getUserName());
-
-            if (!adminOpt.isPresent()) {
+            if (adminOpt.isEmpty()) {
                 System.out.println("Admin not found in DB for username: " + payload.getUserName());
                 return ResponseEntity.status(404).body("ADMIN_NOT_FOUND");
             }
@@ -56,14 +61,25 @@ public class AdminController {
             }
 
             System.out.println("Admin login success for: " + payload.getUserName());
-            return ResponseEntity.ok("OK");
+
+            // ✅ SUCCESS: generate JWT token for ROLE_ADMIN
+            String token = jwtUtil.generateToken(admin.getUserName(), "ROLE_ADMIN");
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("token", token);
+            body.put("userName", admin.getUserName());
+            body.put("role", "ADMIN");
+
+            return ResponseEntity.ok(body);
 
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500)
-                    .body("ERROR:" + e.getMessage());
+                    .body("ERROR: " + e.getMessage());
         }
     }
+
+
 
     @PostMapping("/users/{id}/activate")
     public ResponseEntity<String> activateUser(@PathVariable Long id) {
